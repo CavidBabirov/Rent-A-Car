@@ -1,4 +1,5 @@
 import json
+import sqlite3
 
 
 class Person:
@@ -119,10 +120,12 @@ class Person:
             filtered_data = [entry for entry in data if 'is_active' not in entry or entry['is_active']]
             # filtered_data = data
 
-        print("Filtr edilmis datalar:")
-        for entry in filtered_data:
-            filtered_entry = {key: value for key, value in entry.items() if key != 'is_active'}
-            print(filtered_entry)
+        return filtered_data
+
+        # print("Filtr edilmis datalar:")
+        # for entry in filtered_data:
+        #     filtered_entry = {key: value for key, value in entry.items() if key != 'is_active'}
+        #     print(filtered_entry)
             # print(entry)
             
 
@@ -156,45 +159,86 @@ class Person:
 
 
 
-    def update_person(self):
+    def update_person(self, key):
+        self.conn = sqlite3.connect(self.db_car)
+        self.cursor = self.conn.cursor()
 
-        key = int(input('Id daxil edin: '))
-        
-        for item in self.mydata:
-            if item['id'] == key:
-                self.name = str(input('Name: '))
-                self.surname = str(input('Surname: '))
-                self.father_name = str(input('Father name: '))  
+        self.name = str(input('Name: '))
+        self.surname = str(input('Surname: '))
+        self.father_name = str(input('Father name: '))  
+        self._Fin = input('FIN: ')
+
+        while True:
+            if len(self._Fin) != 7 or self._Fin.isdigit() or self._Fin.isalpha():
+                print('Yanliş məlumat')
                 self._Fin = input('FIN: ')
-
-                while True:
-                    # if len(self._Fin) > 7 or len(self._Fin) < 7:
-                    if len(self._Fin) != 7 or self._Fin.isdigit() or self._Fin.isalpha():
-                        print('Yanliş məlumat')
-                        self._Fin = input('FIN: ')
-                    else:
-                        break
-
-                self.age = int(input('Age: '))
-                if self.age > 80 or self.age < 10:
-                    print('Yanliş məlumat')
-                    self.age = int(input('Age: '))
-
-                self.is_active = True
-                # self.is_active = bool(input('is_active: '))
-
-                item['name'] = self.name
-                item['surname'] = self.surname
-                item['father_name'] = self.father_name
-                item['FIN'] = self._Fin
-                item['age'] = self.age
-                item['is_active'] = self.is_active
-
-                print('Guncellendi.')
+            else:
                 break
 
-        else:
-            print('Yanliş məlumat')
+        self.age = int(input('Age: '))
+        while True:
+            if self.age > 80 or self.age < 10:
+                print('Yanliş məlumat')
+                self.age = int(input('Age: '))
+            else:
+                break
+
+        self.is_active = True
+
+        self.cursor.execute("""
+            UPDATE customers
+            SET name=?, surname=?, father_name=?, FIN=?, age=?, is_active=?
+            WHERE id=?
+        """, (self.name, self.surname, self.father_name, self._Fin, self.age, self.is_active, key))
+
+        self.conn.commit()
+        self.conn.close()
+
+        print('Güncellendi.')
+
+
+
+
+
+
+
+        # key = int(input('Id daxil edin: '))
+        
+        # for item in self.mydata:
+        #     if item['id'] == key:
+        #         self.name = str(input('Name: '))
+        #         self.surname = str(input('Surname: '))
+        #         self.father_name = str(input('Father name: '))  
+        #         self._Fin = input('FIN: ')
+
+        #         while True:
+        #             # if len(self._Fin) > 7 or len(self._Fin) < 7:
+        #             if len(self._Fin) != 7 or self._Fin.isdigit() or self._Fin.isalpha():
+        #                 print('Yanliş məlumat')
+        #                 self._Fin = input('FIN: ')
+        #             else:
+        #                 break
+
+        #         self.age = int(input('Age: '))
+        #         if self.age > 80 or self.age < 10:
+        #             print('Yanliş məlumat')
+        #             self.age = int(input('Age: '))
+
+        #         self.is_active = True
+        #         # self.is_active = bool(input('is_active: '))
+
+        #         item['name'] = self.name
+        #         item['surname'] = self.surname
+        #         item['father_name'] = self.father_name
+        #         item['FIN'] = self._Fin
+        #         item['age'] = self.age
+        #         item['is_active'] = self.is_active
+
+        #         print('Guncellendi.')
+        #         break
+
+        # else:
+        #     print('Yanliş məlumat')
 
             
 
@@ -231,16 +275,31 @@ class Person:
         #         print('Yanliş məlumat')
 
 
-    def delete_person(self):
-        key = int(input('Id daxil edin: '))
+    def delete_person(self, table_name, key):
+        self.conn = sqlite3.connect(self.db_car)
+        self.cursor = self.conn.cursor()
 
-        for item in self.mydata:
-            if item['id'] == key:
-                item['is_active'] = False
-                print('Silindi.')
-                break
-        else:
-            print('Yanliş məlumat')
+        self.cursor.execute(f"UPDATE {table_name} SET is_active=? WHERE id=?", (False, key))
+
+        self.conn.commit()
+        self.conn.close()
+        
+        print('Silindi.')
+
+
+
+
+
+
+        # key = int(input('Id daxil edin: '))
+
+        # for item in self.mydata:
+        #     if item['id'] == key:
+        #         item['is_active'] = False
+        #         print('Silindi.')
+        #         break
+        # else:
+        #     print('Yanliş məlumat')
 
 
         # with open('db_customer.json', 'r') as f:

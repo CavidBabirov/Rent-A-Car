@@ -1,7 +1,9 @@
 import json
 from person import Person
+import sqlite3
 
 class Customer(Person):
+    db_car = "renr_a_car.db"
 
 
     def __init__(self, name, surname, father_name, FIN, age, is_active):
@@ -9,30 +11,56 @@ class Customer(Person):
 
 
     def new_customer(self):
-
-        with open('db_customer.json', 'r') as f:
-            data_dict = json.load(f)
-
-        if not data_dict:
-            data_dict = []
-
         self.new_person(self)
 
-        data_dict.append({
-            'id': len(data_dict) + 1,
-            'name': self.name,
-            'surname': self.surname,
-            'father_name': self.father_name,
-            'FIN': self._Fin,
-            'age': self.age,
-            'is_active': True
-        })
+        self.conn = sqlite3.connect(self.db_car)
+        self.cursor = self.conn.cursor()
 
-        json_string = json.dumps(data_dict, indent=2)
-        with open('db_customer.json', 'w') as f:
-            f.write(json_string)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS customers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                surname TEXT,
+                father_name TEXT,
+                fin TEXT,
+                age INTEGER,
+                is_active INTEGER  
+            )
+        """)
 
-        print("Data db_customer.json ünvanında saxlanıldı")
+        self.cursor.execute("""
+            INSERT INTO customers (name, surname, father_name, fin, age, is_active)
+            VALUES(?, ?, ?, ?, ?, ?)
+        """, (self.name, self.surname, self.father_name, self._Fin, self.age, self.is_active))
+
+        self.conn.commit()
+        self.conn.close()
+
+        print("Data db_car ünvanında saxlanıldı")
+
+        # with open('db_customer.json', 'r') as f:
+        #     data_dict = json.load(f)
+
+        # if not data_dict:
+        #     data_dict = []
+
+        # self.new_person(self)
+
+        # data_dict.append({
+        #     'id': len(data_dict) + 1,
+        #     'name': self.name,
+        #     'surname': self.surname,
+        #     'father_name': self.father_name,
+        #     'FIN': self._Fin,
+        #     'age': self.age,
+        #     'is_active': True
+        # })
+
+        # json_string = json.dumps(data_dict, indent=2)
+        # with open('db_customer.json', 'w') as f:
+        #     f.write(json_string)
+
+        # print("Data db_customer.json ünvanında saxlanıldı")
 
 
 
@@ -52,26 +80,52 @@ class Customer(Person):
 
 
     def all_customer(self):
-        with open('db_customer.json', 'r') as file:
-            data_dict = json.load(file)
+        self.conn = sqlite3.connect(self.db_car)
+        self.cursor = self.conn.cursor()
 
-            # is_active true olanlari getir.
+        self.cursor.execute("SELECT * FROM customers")
+        rows = self.cursor.fetchall()
 
-        self.all_person(self, data = data_dict)
+        data = [{'name': row[1], 'surname': row[2], 'father_name': row[3], 'FIN': row[4], 'age': row[5], 'is_active': bool(row[6])} for row in rows]
+
+        filtered_data = self.all_person(self, data)
+
+        print("Filtr edilmis datalar:")
+        for entry in filtered_data:
+            filtered_entry = {key: value for key, value in entry.items() if key != 'is_active'}
+            print(filtered_entry)
+        
+        self.conn.close()
+
+
+
+
+
+        # with open('db_customer.json', 'r') as file:
+        #     data_dict = json.load(file)
+
+        #     # is_active true olanlari getir.
+
+        # self.all_person(self, data = data_dict)
                    
 
     def update_customer(self):
-        with open('db_customer.json', 'r') as f:
-            self.mydata = json.load(f)
-
-        self.update_person(self)
+        key = int(input('Id daxil edin: '))
+        self.update_person(self, key)
 
 
-        json_string = json.dumps(self.mydata, indent=2)
-        with open('db_customer.json', 'w') as f:
-            f.write(json_string)
 
-        print("Data db_customer.json ünvanında saxlanıldı")
+        # with open('db_customer.json', 'r') as f:
+        #     self.mydata = json.load(f)
+
+        # self.update_person(self)
+
+
+        # json_string = json.dumps(self.mydata, indent=2)
+        # with open('db_customer.json', 'w') as f:
+        #     f.write(json_string)
+
+        # print("Data db_customer.json ünvanında saxlanıldı")
 
 
 
@@ -87,14 +141,20 @@ class Customer(Person):
 
 
     def delete_customer(self):
-        with open('db_customer.json', 'r') as f:
-            self.mydata = json.load(f)
-        
-        self.delete_person(self)
+        key = int(input('Id daxil edin: '))
+        self.delete_person(self, 'customers', key)
 
-        json_string = json.dumps(self.mydata, indent=2)
-        with open('db_customer.json', 'w') as f:
-            f.write(json_string) 
+
+
+
+        # with open('db_customer.json', 'r') as f:
+        #     self.mydata = json.load(f)
+        
+        # self.delete_person(self)
+
+        # json_string = json.dumps(self.mydata, indent=2)
+        # with open('db_customer.json', 'w') as f:
+        #     f.write(json_string) 
 
 
 
